@@ -198,6 +198,22 @@
   footer{text-align:center;color:#454d72;font-size:12px;margin-top:42px;letter-spacing:.4px;}
   .empty{text-align:center;color:var(--muted);padding:40px 0;}
 
+  /* ===== BIG COMPOSER CTA ===== */
+  .compose-cta{display:flex;align-items:center;gap:16px;width:100%;margin:2px 0 24px;padding:20px 22px;cursor:pointer;font-family:inherit;text-align:left;
+    border-radius:20px;color:#fff;border:1px solid color-mix(in srgb,#7c5cff 60%,transparent);position:relative;overflow:hidden;
+    background:linear-gradient(135deg,rgba(124,92,255,.28),rgba(34,211,238,.18));
+    box-shadow:0 0 28px rgba(124,92,255,.42), inset 0 0 24px rgba(124,92,255,.12);
+    animation:ctaGlow 3.2s ease-in-out infinite;transition:transform .15s ease;}
+  .compose-cta:hover{transform:translateY(-2px);}
+  .compose-cta:active{transform:scale(.98);}
+  .compose-cta .cta-ico{flex:0 0 auto;width:60px;height:60px;border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:32px;
+    background:linear-gradient(135deg,#7c5cff,#22d3ee);box-shadow:0 0 22px rgba(124,92,255,.7), inset 0 0 12px rgba(255,255,255,.25);}
+  .compose-cta .cta-txt{flex:1 1 auto;}
+  .compose-cta .cta-txt b{display:block;font-size:19px;font-weight:800;letter-spacing:.4px;text-shadow:0 0 16px rgba(124,92,255,.5);}
+  .compose-cta .cta-txt span{display:block;font-size:13px;color:#bcc4ee;margin-top:3px;line-height:1.4;}
+  .compose-cta .cta-arrow{flex:0 0 auto;font-size:26px;color:#22d3ee;text-shadow:0 0 14px rgba(34,211,238,.7);}
+  @keyframes ctaGlow{0%,100%{box-shadow:0 0 22px rgba(124,92,255,.32), inset 0 0 20px rgba(124,92,255,.10);}50%{box-shadow:0 0 40px rgba(34,211,238,.55), inset 0 0 26px rgba(124,92,255,.18);}}
+
   /* ===== COMPOSER ===== */
   .comp-controls{display:flex;flex-wrap:wrap;gap:9px;margin:0 0 18px;align-items:center;}
   .comp-btn{padding:10px 18px;border-radius:12px;border:1px solid var(--line);background:rgba(12,14,26,.85);color:#dfe6ff;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;transition:.15s;white-space:nowrap;}
@@ -257,6 +273,11 @@
   <section id="view-styles" class="view active">
     <div id="home">
       <div class="search"><input id="searchInput" type="text" placeholder="Rechercher un style (rap, drill, lofi...)" autocomplete="off"></div>
+      <button class="compose-cta" id="composeCta">
+        <span class="cta-ico">🎹</span>
+        <span class="cta-txt"><b>Composer mes mélodies</b><span>Piano roll éditable · joue en boucle · exporte en MIDI pour FL Studio</span></span>
+        <span class="cta-arrow">→</span>
+      </button>
       <p class="section-title"><b>Choisis un style</b></p>
       <div class="grid" id="grid"></div>
       <p class="empty" id="noResult" style="display:none">Aucun style trouvé 🤔</p>
@@ -663,6 +684,7 @@ function openStyle(id){
 function goHomeStyles(){ stopAll(); detail.classList.remove("active"); home.style.display="block"; }
 document.getElementById("backBtn").addEventListener("click",goHomeStyles);
 document.getElementById("searchInput").addEventListener("input",e=>renderGrid(e.target.value));
+document.getElementById("composeCta").addEventListener("click",()=>showView("composer"));
 
 /* ============================================================ PROGRESSIONS (banques) ============================================================ */
 const PROG_GROUPS=[
