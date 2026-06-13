@@ -240,16 +240,37 @@ function chordFreqs(root,q,oct){ const Q=QUALITIES[q]||QUALITIES.maj; const b=mi
 /* ============================================================
    MOTEUR AUDIO
    ============================================================ */
-let audioCtx=null, noiseBuf=null;
+let audioCtx=null, noiseBuf=null, silentEl=null, unlocked=false;
 function ctx(){
   if(!audioCtx){
     audioCtx=new (window.AudioContext||window.webkitAudioContext)();
-    const n=audioCtx.sampleRate*1.0; noiseBuf=audioCtx.createBuffer(1,n,audioCtx.sampleRate);
+    const n=audioCtx.sampleRate; noiseBuf=audioCtx.createBuffer(1,n,audioCtx.sampleRate);
     const d=noiseBuf.getChannelData(0); for(let i=0;i<n;i++) d[i]=Math.random()*2-1;
   }
   if(audioCtx.state==="suspended") audioCtx.resume();
   return audioCtx;
 }
+/* WAV de silence : force iOS en mode "lecture" pour jouer même si le bouton Silence est activé */
+function makeSilentAudio(){
+  const sr=8000, secs=0.4, n=Math.floor(sr*secs), bytes=44+n*2;
+  const buf=new ArrayBuffer(bytes), dv=new DataView(buf);
+  const w=(o,s)=>{for(let i=0;i<s.length;i++)dv.setUint8(o+i,s.charCodeAt(i));};
+  w(0,"RIFF");dv.setUint32(4,bytes-8,true);w(8,"WAVE");w(12,"fmt ");
+  dv.setUint32(16,16,true);dv.setUint16(20,1,true);dv.setUint16(22,1,true);
+  dv.setUint32(24,sr,true);dv.setUint32(28,sr*2,true);dv.setUint16(32,2,true);dv.setUint16(34,16,true);
+  w(36,"data");dv.setUint32(40,n*2,true);
+  const a=new Audio(URL.createObjectURL(new Blob([buf],{type:"audio/wav"})));
+  a.loop=true; a.volume=0.02; return a;
+}
+/* Débloque l'audio sur la 1re interaction (obligatoire sur iOS/Safari) */
+function unlockAudio(){
+  const ac=ctx(); if(ac.state==="suspended") ac.resume();
+  try{const b=ac.createBufferSource();b.buffer=ac.createBuffer(1,1,ac.sampleRate);b.connect(ac.destination);b.start(0);}catch(e){}
+  if(!silentEl){ try{silentEl=makeSilentAudio();}catch(e){} }
+  if(silentEl){ silentEl.play().catch(()=>{}); }
+  unlocked=true;
+}
+["touchend","pointerdown","click"].forEach(ev=>document.addEventListener(ev,unlockAudio,{passive:true}));
 function noiseSrc(){ const ac=ctx(); const s=ac.createBufferSource(); s.buffer=noiseBuf; s.loop=true; return s; }
 function bpm(){ return parseInt(document.getElementById("tempoSlider").value,10); }
 
@@ -293,7 +314,7 @@ function stopDrums(){ if(curDrums){clearInterval(curDrums.timer);cancelAnimation
 function stopAll(){ stopChord(); stopDrums(); }
 
 function playProgression(prog,btn,oct){
-  stopAll();
+  unlockAudio(); stopAll();
   const ac=ctx(); const dur=(60/bpm())*2; const start=ac.currentTime+0.06; const timeouts=[];
   const cells=btn.closest(".panel").querySelectorAll(".chord");
   prog.chords.forEach((c,i)=>{
@@ -305,7 +326,7 @@ function playProgression(prog,btn,oct){
 }
 
 function playDrumPattern(pat,btn,grid){
-  stopAll();
+  unlockAudio(); stopAll();
   const ac=ctx(); let step=0; let nextTime=ac.currentTime+0.1; const scheduled=[];
   const rows=[...grid.querySelectorAll(".row")];
   const timer=setInterval(()=>{
